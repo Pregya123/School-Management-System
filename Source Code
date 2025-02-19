@@ -1,0 +1,361 @@
+
+import tkinter as tk
+from tkinter import ttk, messagebox
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from datetime import datetime
+import json
+
+class SchoolManagementSystem:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("School Management System")
+        self.root.geometry("800x600")
+        
+        # Initialize data storage
+        self.students = pd.DataFrame(columns=['ID', 'Name', 'Age', 'Grade', 'Contact'])
+        self.teachers = pd.DataFrame(columns=['ID', 'Name', 'Subject', 'Contact'])
+        self.attendance = pd.DataFrame(columns=['Date', 'StudentID', 'Status'])
+        self.grades = pd.DataFrame(columns=['StudentID', 'Subject', 'Score'])
+        
+        self.setup_gui()
+        
+    def setup_gui(self):
+        # Create notebook for different sections
+        self.notebook = ttk.Notebook(self.root)
+        
+        # Create tabs
+        self.students_tab = ttk.Frame(self.notebook)
+        self.teachers_tab = ttk.Frame(self.notebook)
+        self.attendance_tab = ttk.Frame(self.notebook)
+        self.grades_tab = ttk.Frame(self.notebook)
+        self.analytics_tab = ttk.Frame(self.notebook)
+        
+        self.notebook.add(self.students_tab, text="Students")
+        self.notebook.add(self.teachers_tab, text="Teachers")
+        self.notebook.add(self.attendance_tab, text="Attendance")
+        self.notebook.add(self.grades_tab, text="Grades")
+        self.notebook.add(self.analytics_tab, text="Analytics")
+        
+        self.notebook.pack(expand=True, fill="both")
+        
+        # Setup individual tabs
+        self.setup_students_tab()
+        self.setup_teachers_tab()
+        self.setup_attendance_tab()
+        self.setup_grades_tab()
+        self.setup_analytics_tab()
+    
+    def setup_students_tab(self):
+        # Student Information Entry
+        frame = ttk.LabelFrame(self.students_tab, text="Add Student")
+        frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
+        
+        ttk.Label(frame, text="ID:").grid(row=0, column=0, padx=5, pady=5)
+        self.student_id = ttk.Entry(frame)
+        self.student_id.grid(row=0, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Name:").grid(row=1, column=0, padx=5, pady=5)
+        self.student_name = ttk.Entry(frame)
+        self.student_name.grid(row=1, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Age:").grid(row=2, column=0, padx=5, pady=5)
+        self.student_age = ttk.Entry(frame)
+        self.student_age.grid(row=2, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Grade:").grid(row=3, column=0, padx=5, pady=5)
+        self.student_grade = ttk.Entry(frame)
+        self.student_grade.grid(row=3, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Contact:").grid(row=4, column=0, padx=5, pady=5)
+        self.student_contact = ttk.Entry(frame)
+        self.student_contact.grid(row=4, column=1, padx=5, pady=5)
+        
+        ttk.Button(frame, text="Add Student", command=self.add_student).grid(row=5, column=0, columnspan=2, pady=10)
+        
+        # Student List
+        list_frame = ttk.LabelFrame(self.students_tab, text="Student List")
+        list_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
+        
+        self.student_tree = ttk.Treeview(list_frame, columns=('ID', 'Name', 'Age', 'Grade', 'Contact'), show='headings')
+        self.student_tree.heading('ID', text='ID')
+        self.student_tree.heading('Name', text='Name')
+        self.student_tree.heading('Age', text='Age')
+        self.student_tree.heading('Grade', text='Grade')
+        self.student_tree.heading('Contact', text='Contact')
+        self.student_tree.grid(row=0, column=0, padx=5, pady=5)
+    
+    def setup_teachers_tab(self):
+        # Teacher Information Entry
+        frame = ttk.LabelFrame(self.teachers_tab, text="Add Teacher")
+        frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
+        
+        ttk.Label(frame, text="ID:").grid(row=0, column=0, padx=5, pady=5)
+        self.teacher_id = ttk.Entry(frame)
+        self.teacher_id.grid(row=0, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Name:").grid(row=1, column=0, padx=5, pady=5)
+        self.teacher_name = ttk.Entry(frame)
+        self.teacher_name.grid(row=1, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Subject:").grid(row=2, column=0, padx=5, pady=5)
+        self.teacher_subject = ttk.Entry(frame)
+        self.teacher_subject.grid(row=2, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Contact:").grid(row=3, column=0, padx=5, pady=5)
+        self.teacher_contact = ttk.Entry(frame)
+        self.teacher_contact.grid(row=3, column=1, padx=5, pady=5)
+        
+        ttk.Button(frame, text="Add Teacher", command=self.add_teacher).grid(row=4, column=0, columnspan=2, pady=10)
+        
+        # Teacher List
+        list_frame = ttk.LabelFrame(self.teachers_tab, text="Teacher List")
+        list_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
+        
+        self.teacher_tree = ttk.Treeview(list_frame, columns=('ID', 'Name', 'Subject', 'Contact'), show='headings')
+        self.teacher_tree.heading('ID', text='ID')
+        self.teacher_tree.heading('Name', text='Name')
+        self.teacher_tree.heading('Subject', text='Subject')
+        self.teacher_tree.heading('Contact', text='Contact')
+        self.teacher_tree.grid(row=0, column=0, padx=5, pady=5)
+    
+    def setup_attendance_tab(self):
+        frame = ttk.LabelFrame(self.attendance_tab, text="Mark Attendance")
+        frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
+        
+        ttk.Label(frame, text="Student ID:").grid(row=0, column=0, padx=5, pady=5)
+        self.attendance_student_id = ttk.Entry(frame)
+        self.attendance_student_id.grid(row=0, column=1, padx=5, pady=5)
+        
+        self.attendance_status = tk.StringVar(value="Present")
+        ttk.Radiobutton(frame, text="Present", variable=self.attendance_status, value="Present").grid(row=1, column=0)
+        ttk.Radiobutton(frame, text="Absent", variable=self.attendance_status, value="Absent").grid(row=1, column=1)
+        
+        ttk.Button(frame, text="Mark Attendance", command=self.mark_attendance).grid(row=2, column=0, columnspan=2, pady=10)
+        
+        # Attendance List
+        list_frame = ttk.LabelFrame(self.attendance_tab, text="Attendance Record")
+        list_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
+        
+        self.attendance_tree = ttk.Treeview(list_frame, columns=('Date', 'StudentID', 'Status'), show='headings')
+        self.attendance_tree.heading('Date', text='Date')
+        self.attendance_tree.heading('StudentID', text='Student ID')
+        self.attendance_tree.heading('Status', text='Status')
+        self.attendance_tree.grid(row=0, column=0, padx=5, pady=5)
+    
+    def setup_grades_tab(self):
+        frame = ttk.LabelFrame(self.grades_tab, text="Add Grades")
+        frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
+        
+        ttk.Label(frame, text="Student ID:").grid(row=0, column=0, padx=5, pady=5)
+        self.grade_student_id = ttk.Entry(frame)
+        self.grade_student_id.grid(row=0, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Subject:").grid(row=1, column=0, padx=5, pady=5)
+        self.grade_subject = ttk.Entry(frame)
+        self.grade_subject.grid(row=1, column=1, padx=5, pady=5)
+        
+        ttk.Label(frame, text="Score:").grid(row=2, column=0, padx=5, pady=5)
+        self.grade_score = ttk.Entry(frame)
+        self.grade_score.grid(row=2, column=1, padx=5, pady=5)
+        
+        ttk.Button(frame, text="Add Grade", command=self.add_grade).grid(row=3, column=0, columnspan=2, pady=10)
+        
+        # Grades List
+        list_frame = ttk.LabelFrame(self.grades_tab, text="Grade Record")
+        list_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
+        
+        self.grades_tree = ttk.Treeview(list_frame, columns=('StudentID', 'Subject', 'Score'), show='headings')
+        self.grades_tree.heading('StudentID', text='Student ID')
+        self.grades_tree.heading('Subject', text='Subject')
+        self.grades_tree.heading('Score', text='Score')
+        self.grades_tree.grid(row=0, column=0, padx=5, pady=5)
+    
+    def setup_analytics_tab(self):
+        self.figure, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(8, 8))
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.analytics_tab)
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        
+        ttk.Button(self.analytics_tab, text="Update Analytics", command=self.update_analytics).pack(pady=10)
+    
+    def add_student(self):
+        try:
+            new_student = pd.DataFrame({
+                'ID': [self.student_id.get()],
+                'Name': [self.student_name.get()],
+                'Age': [int(self.student_age.get())],
+                'Grade': [self.student_grade.get()],
+                'Contact': [self.student_contact.get()]
+            })
+            self.students = pd.concat([self.students, new_student], ignore_index=True)
+            self.update_student_list()
+            self.clear_student_entries()
+            messagebox.showinfo("Success", "Student added successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to add student: {str(e)}")
+    
+    def add_teacher(self):
+        try:
+            new_teacher = pd.DataFrame({
+                'ID': [self.teacher_id.get()],
+                'Name': [self.teacher_name.get()],
+                'Subject': [self.teacher_subject.get()],
+                'Contact': [self.teacher_contact.get()]
+            })
+            self.teachers = pd.concat([self.teachers, new_teacher], ignore_index=True)
+            self.update_teacher_list()
+            self.clear_teacher_entries()
+            messagebox.showinfo("Success", "Teacher added successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to add teacher: {str(e)}")
+    
+    def mark_attendance(self):
+        try:
+            new_attendance = pd.DataFrame({
+                'Date': [datetime.now().strftime("%Y-%m-%d")],
+                'StudentID': [self.attendance_student_id.get()],
+                'Status': [self.attendance_status.get()]
+            })
+            self.attendance = pd.concat([self.attendance, new_attendance], ignore_index=True)
+            self.update_attendance_list()
+            self.attendance_student_id.delete(0, tk.END)
+            messagebox.showinfo("Success", "Attendance marked successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to mark attendance: {str(e)}")
+    
+    def add_grade(self):
+        try:
+            new_grade = pd.DataFrame({
+                'StudentID': [self.grade_student_id.get()],
+                'Subject': [self.grade_subject.get()],
+                'Score': [float(self.grade_score.get())]
+            })
+            self.grades = pd.concat([self.grades, new_grade], ignore_index=True)
+            self.update_grades_list()
+            self.clear_grade_entries()
+            messagebox.showinfo("Success", "Grade added successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to add grade: {str(e)}")
+    
+    def update_analytics(self):
+        # Clear previous plots
+        self.ax1.clear()
+        self.ax2.clear()
+        
+        # Attendance Analysis
+        if not self.attendance.empty:
+            attendance_stats = self.attendance['Status'].value_counts()
+            self.ax1.pie(attendance_stats.values, labels=attendance_stats.index, autopct='%1.1f%%')
+            self.ax1.set_title('Attendance Distribution')
+        
+        # Grade Analysis
+        if not self.grades.empty:
+            grade_means = self.grades.groupby('Subject')['Score'].mean()
+            grade_means.plot(kind='bar', ax=self.ax2)
+            self.ax2.set_title('Average Grades by Subject')
+            self.ax2.set_xlabel('Subject')
+            self.ax2.set_ylabel('Average Score')
+            plt.xticks(rotation=45)
+        
+        self.figure.tight_layout()
+        self.canvas.draw()
+    
+    def update_student_list(self):
+        for item in self.student_tree.get_children():
+            self.student_tree.delete(item)
+        for _, row in self.students.iterrows():
+            self.student_tree.insert('', 'end', values=tuple(row))
+    
+    def update_teacher_list(self):
+        for item in self.teacher_tree.get_children():
+            self.teacher_tree.delete(item)
+        for _, row in self.teachers.iterrows():
+            self.teacher_tree.insert('', 'end', values=tuple(row))
+    
+    def update_attendance_list(self):
+        for item in self.attendance_tree.get_children():
+            self.attendance_tree.delete(item)
+        for _, row in self.attendance.iterrows():
+            self.attendance_tree.insert('', 'end', values=tuple(row))
+    
+    def update_grades_list(self):
+        for item in self.grades_tree.get_children():
+            self.grades_tree.delete(item)
+        for _, row in self.grades.iterrows():
+            self.grades_tree.insert('', 'end', values=tuple(row))
+    
+    def clear_student_entries(self):
+        self.student_id.delete(0, tk.END)
+        self.student_name.delete(0, tk.END)
+        self.student_age.delete(0, tk.END)
+        self.student_grade.delete(0, tk.END)
+        self.student_contact.delete(0, tk.END)
+    
+    def clear_teacher_entries(self):
+        self.teacher_id.delete(0, tk.END)
+        self.teacher_name.delete(0, tk.END)
+        self.teacher_subject.delete(0, tk.END)
+        self.teacher_contact.delete(0, tk.END)
+    
+    def clear_grade_entries(self):
+        self.grade_student_id.delete(0, tk.END)
+        self.grade_subject.delete(0, tk.END)
+        self.grade_score.delete(0, tk.END)
+    
+    def save_data(self):
+        try:
+            data = {
+                'students': self.students.to_dict('records'),
+                'teachers': self.teachers.to_dict('records'),
+                'attendance': self.attendance.to_dict('records'),
+                'grades': self.grades.to_dict('records')
+            }
+            with open('school_data.json', 'w') as f:
+                json.dump(data, f)
+            messagebox.showinfo("Success", "Data saved successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save data: {str(e)}")
+    
+    def load_data(self):
+        try:
+            with open('school_data.json', 'r') as f:
+                data = json.load(f)
+            self.students = pd.DataFrame(data['students'])
+            self.teachers = pd.DataFrame(data['teachers'])
+            self.attendance = pd.DataFrame(data['attendance'])
+            self.grades = pd.DataFrame(data['grades'])
+            
+            self.update_student_list()
+            self.update_teacher_list()
+            self.update_attendance_list()
+            self.update_grades_list()
+            self.update_analytics()
+            
+            messagebox.showinfo("Success", "Data loaded successfully!")
+        except FileNotFoundError:
+            messagebox.showinfo("Info", "No saved data found.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load data: {str(e)}")
+    
+    def run(self):
+        # Add menu bar
+        menubar = tk.Menu(self.root)
+        file_menu = tk.Menu(menubar, tearoff=0)
+        file_menu.add_command(label="Save Data", command=self.save_data)
+        file_menu.add_command(label="Load Data", command=self.load_data)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.root.quit)
+        menubar.add_cascade(label="File", menu=file_menu)
+        self.root.config(menu=menubar)
+        
+        # Load any existing data
+        self.load_data()
+        
+        # Start the application
+        self.root.mainloop()
+
+if __name__ == "__main__":
+    app = SchoolManagementSystem()
+    app.run()
